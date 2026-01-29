@@ -16,6 +16,15 @@
 UACP_VERSION="3.2.0"
 UACP_DIR=".ai"
 
+# Get script directory for template files (follow symlinks)
+if [ -L "${BASH_SOURCE[0]}" ]; then
+    SCRIPT_PATH=$(readlink "${BASH_SOURCE[0]}")
+    SCRIPT_DIR="$( cd "$( dirname "$SCRIPT_PATH" )" && pwd )"
+else
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+fi
+TEMPLATE_DIR="$SCRIPT_DIR/templates"
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
@@ -34,6 +43,18 @@ success() {
 # Print info message
 info() {
     echo "$1"
+}
+
+# Load template file and substitute variables
+load_template() {
+    local template_name="$1"
+    local template_file="$TEMPLATE_DIR/$template_name"
+
+    if [ ! -f "$template_file" ]; then
+        error "Template not found: $template_file"
+    fi
+
+    cat "$template_file"
 }
 
 # Print usage/help
@@ -68,7 +89,11 @@ DIRECTORY STRUCTURE:
     ├── artifacts/              Generated outputs
     └── tmp/                    Experimental work
 
-For more information, visit the project repository.
+TEMPLATES:
+    Templates are stored in: $TEMPLATE_DIR
+    Modify these files to customize UACP structure for all new projects.
+
+For more information, visit: https://github.com/OG-Ken/UACP
 EOF
 }
 
@@ -117,176 +142,19 @@ cmd_init() {
 
     success "Created $UACP_DIR directory structure"
 
-    # 2. Generate context.md
-    cat > "$UACP_DIR/context.md" <<'CONTEXT_EOF'
-# Project Context
-
-## 1. Operating Rules
-- **Collaborative Guidance**: Work with the user to clarify ambiguities rather than making assumptions. The user relies on you for technical expertise and heavy lifting, but you must seek clarification when requirements are unclear.
-- **Filesystem as Memory**: You must read before you write. Check `.ai/memory/` for active state.
-- **Root Directory Purity**: NEVER create context, summary, or memory files in the project root. All such files MUST go into `.ai/memory/`.
-- **Templates**: When creating files that follow established patterns, check `.ai/templates/` for guidance.
-- **Organic Memory**: You are empowered to create new files in `.ai/memory/` to store persistent context (e.g., `.ai/memory/architecture_summary.md`).
-- **Tmp Folder**: Use `.ai/tmp/` for experimental code, ideas, or scratchpads. Do not put production code here.
-
-## 2. Directory Structure
-- **/.ai/context.md**: This file. Your starting point and general pivot.
-- **/.ai/memory/**: Active project state. READ THIS FIRST before taking action.
-- **/.ai/templates/**: Patterns and examples for creating consistent files.
-- **/.ai/artifacts/**: Final deliverables and generated outputs.
-- **/.ai/tmp/**: Sandbox for experiments and non-production work.
-
-## 3. Project Definition
-**Name**: PROJECT_NAME_PLACEHOLDER
-**Goal**: [Brief Description - To be filled by User or Agent]
-**Status**: Initialized
-
-## 4. Template System
-When you need to create a structured file (task list, log entry, documentation), check `.ai/templates/` for existing patterns. Templates provide consistency across sessions and agents.
-
-### Template Discovery
-List available templates:
-```bash
-ls .ai/templates/
-```
-
-Read a specific template:
-```bash
-cat .ai/templates/task.md
-```
-
-## 5. Memory Management
-The `.ai/memory/` directory is your persistent working memory:
-- **task.md** - Current task list and status
-- **context_*.md** - Domain-specific context (architecture, decisions, etc.)
-- **logs/** - Session logs and change history (if needed)
-
-Create memory files freely when they add value for future sessions.
-
----
-*UACP v3.0 - AI-Agnostic Context Protocol*
-CONTEXT_EOF
-
-    # Replace placeholder with actual project name
-    sed -i.bak "s/PROJECT_NAME_PLACEHOLDER/$project_name/g" "$UACP_DIR/context.md"
-    rm -f "$UACP_DIR/context.md.bak"
-
+    # 2. Generate context.md from template
+    load_template "context.md" | sed "s/{{PROJECT_NAME}}/$project_name/g" > "$UACP_DIR/context.md"
     success "Generated $UACP_DIR/context.md"
 
-    # 3. Generate templates
-    cat > "$UACP_DIR/templates/task.md" <<'TEMPLATE_EOF'
-# Task List Template
-
-Use this format when creating or updating `.ai/memory/task.md`:
-
-## Active Tasks
-- [ ] Task description <!-- id: 1 -->
-- [ ] Another task <!-- id: 2 -->
-
-## Completed Tasks
-- [x] Finished task <!-- id: 0 -->
-
-## Guidelines
-1. **Format**: Use checklist format `- [ ]` for pending, `- [x]` for completed
-2. **IDs**: Use comment IDs `<!-- id: N -->` for stability across sessions
-3. **Grouping**: Organize by phase, feature, or priority
-4. **Status**: Update frequently as work progresses
-5. **Archive**: Move completed tasks to a separate section rather than deleting
-TEMPLATE_EOF
-
-    cat > "$UACP_DIR/templates/session_log.md" <<'TEMPLATE_EOF'
-# Session Log Template
-
-Use this format when creating log entries in `.ai/memory/`:
-
-## Session: YYYY-MM-DD
-
-### Changes Made
-- Brief description of changes
-- Another change
-
-### Decisions
-- Key decision: rationale
-- Another decision: rationale
-
-### Context for Next Session
-- Important information to remember
-- Known issues or blockers
-
----
-
-## Guidelines
-1. **Filename**: Use descriptive names like `session_YYYY-MM-DD.md` or `feature_name_log.md`
-2. **Timestamp**: Include date and optionally time for each entry
-3. **Brevity**: Focus on WHY things changed, not exhaustive WHAT
-4. **Purpose**: Help future agents (or yourself) understand context quickly
-5. **Decisions**: Record architectural decisions and their reasoning
-TEMPLATE_EOF
-
-    cat > "$UACP_DIR/templates/context_summary.md" <<'TEMPLATE_EOF'
-# Context Summary Template
-
-Use this format when creating high-level project summaries in `.ai/memory/`:
-
-# [Project/Feature] Summary
-
-## Overview
-Brief description of the project or feature.
-
-## Architecture
-Key architectural decisions and structure:
-- Component A: purpose
-- Component B: purpose
-
-## Current Status
-- What's working
-- What's in progress
-- What's not yet implemented
-
-## Key Constraints
-- Technical limitations
-- Dependencies
-- Known issues
-
-## Quick Start
-Essential commands or entry points for understanding the codebase.
-
----
-
-## Guidelines
-1. **Location**: MUST be in `.ai/memory/` (e.g., `.ai/memory/architecture.md`)
-2. **Purpose**: Compress large documentation into token-efficient format
-3. **Audience**: Future agents or yourself returning after time away
-4. **Maintenance**: Update when significant changes occur
-TEMPLATE_EOF
-
+    # 3. Copy templates to project
+    cp "$TEMPLATE_DIR/task.md" "$UACP_DIR/templates/"
+    cp "$TEMPLATE_DIR/session_log.md" "$UACP_DIR/templates/"
+    cp "$TEMPLATE_DIR/context_summary.md" "$UACP_DIR/templates/"
     success "Generated templates"
 
-    # 4. Generate pointer files
-    local pointer_content='<!-- DO NOT EDIT THIS FILE -->
-<!-- This file is a POINTER to the Unified Agentic Context Protocol (UACP) -->
-
-# NOTICE TO AGENT
-You are operating within a UACP project.
-
-## Read First
-1. **CONTEXT**: Read `.ai/context.md` for rules and structure
-2. **MEMORY**: Check `.ai/memory/` for active tasks and state
-3. **TEMPLATES**: Check `.ai/templates/` when creating structured files
-
-## Restrictions
-- **Root Directory Purity**: Do NOT create context, summary, or memory files in the project root
-- **Read Before Write**: Always check existing state in `.ai/memory/` before taking action
-- **Collaborative Guidance**: When requirements are unclear, ask for clarification rather than making assumptions
-
-## Logic Flow
-```
-Read This File → Read .ai/context.md → Read .ai/memory/task.md → Execute
-```
-
----
-*UACP v3.0 - Filesystem as Memory for AI Agents*
-'
+    # 4. Generate pointer files from template
+    local pointer_content
+    pointer_content=$(load_template "pointer.md")
 
     # Handle -claudeonly option
     if [[ "$options" == *"claudeonly"* ]]; then
@@ -300,30 +168,17 @@ Read This File → Read .ai/context.md → Read .ai/memory/task.md → Execute
         success "Generated pointer files (claude.md, gemini.md, agents.md, open-code.md)"
     fi
 
-    # 5. Create initial memory
+    # 5. Create initial memory from template
     if [ ! -f "$UACP_DIR/memory/task.md" ]; then
-        cat > "$UACP_DIR/memory/task.md" <<'MEMORY_EOF'
-# Active Tasks
-
-- [ ] Initialize project and define goals <!-- id: 0 -->
-
-## Guidelines
-See `.ai/templates/task.md` for format and best practices.
-MEMORY_EOF
+        load_template "initial_task.md" > "$UACP_DIR/memory/task.md"
         success "Created initial memory/task.md"
     else
         info "  [SKIP] memory/task.md already exists"
     fi
 
-    # 6. Generate .gitignore
+    # 6. Generate .gitignore from template (ignores .ai/ by default)
     if [ ! -f ".gitignore" ]; then
-        cat > ".gitignore" <<'GITIGNORE_EOF'
-# UACP - Temporary and experimental files
-.ai/tmp/*
-!.ai/tmp/.gitkeep
-
-# Keep the tmp directory structure but ignore contents
-GITIGNORE_EOF
+        load_template "gitignore.md" > ".gitignore"
         touch "$UACP_DIR/tmp/.gitkeep"
         success "Generated .gitignore"
     else
@@ -340,6 +195,9 @@ GITIGNORE_EOF
     info "  1. Read claude.md, gemini.md, agents.md, or open-code.md"
     info "  2. Update .ai/memory/task.md with your project goals"
     info "  3. Update .ai/context.md with project-specific information"
+    echo ""
+    info "Note: The .ai/ directory is gitignored by default for privacy."
+    info "      Modify .gitignore if you want to commit AI context to your repo."
     echo ""
     info "Directory Structure:"
     info "  .ai/"
@@ -363,6 +221,7 @@ Unified Agentic Context Protocol
 A filesystem-based context management system for AI agents.
 
 Repository: https://github.com/OG-Ken/UACP
+Templates: $TEMPLATE_DIR
 EOF
 }
 
