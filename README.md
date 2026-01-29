@@ -122,6 +122,55 @@ uacp init "MyProject"      # Subcommand style (recommended)
 uacp -init "MyProject"     # Flag style (backwards compatible)
 ```
 
+## Customizing Templates
+
+UACP templates are stored in `templates/` directory and can be easily customized:
+
+```bash
+cd /path/to/UACP/templates
+nano context.md          # Edit context template
+nano pointer.md          # Edit pointer file template
+```
+
+Changes to templates affect all **new** projects initialized with `uacp init`. Existing projects keep their original files.
+
+### Template Variables
+
+Templates support these placeholders:
+- `{{PROJECT_NAME}}` - Replaced with project name during initialization
+
+## Privacy & Git Ignore
+
+By default, UACP generates a `.gitignore` that **excludes the `.ai/` directory**. This keeps your development process private and your repository clean.
+
+### Why Ignore .ai/ by Default?
+
+1. **Privacy**: Your working context, decisions, and thought process remain local
+2. **Cleaner Repos**: Focus commits on actual code, not AI context files
+3. **Personal Workflow**: Different team members can maintain their own AI context
+4. **Flexibility**: Easily modify if you want to share context
+
+### Committing .ai/ Directory (Optional)
+
+If you want to commit AI context to your repository:
+
+```bash
+# Remove .ai/ from .gitignore
+sed -i '' '/^\.ai\/$/d' .gitignore
+
+# Or manually edit .gitignore and remove the .ai/ line
+nano .gitignore
+
+# Then commit
+git add .ai/
+git commit -m "Add AI context to repository"
+```
+
+**Use cases for committing .ai/:**
+- Team wants shared AI context and decisions
+- Documentation of architectural choices
+- Onboarding new team members with AI assistance
+
 ## Usage Examples
 
 ### Basic Initialization
@@ -195,6 +244,13 @@ UACP/
 ├── uacp                    # Main CLI script (modular, extensible)
 ├── install.sh              # Installation script
 ├── uninstall.sh            # Uninstallation script
+├── templates/              # Template files for initialization
+│   ├── context.md          # Project context template
+│   ├── pointer.md          # Pointer file template
+│   ├── task.md             # Task list template
+│   ├── session_log.md      # Session log template
+│   ├── context_summary.md  # Context summary template
+│   └── initial_task.md     # Initial task template
 ├── DEVELOPER_GUIDE.md      # Detailed guide for adding commands
 ├── README.md               # This file
 ├── .gitignore              # Git ignore rules
