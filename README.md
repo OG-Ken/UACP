@@ -79,7 +79,7 @@ my-awesome-project/
 │   │   └── context_summary.md # Summary template
 │   ├── artifacts/              # Deliverables
 │   └── tmp/                    # Experiments
-├── .gitignore                  # Ignores .ai/tmp/
+├── .gitignore                  # Ignores .ai
 ├── claude.md                   # Pointer file
 ├── gemini.md                   # Pointer file
 ├── agents.md                   # Pointer file
@@ -384,10 +384,10 @@ See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for development guidelines.
 
 Private - All Rights Reserved
 
-## Author
+## Authors
 
-Ken
+OG-Ken
 
 ---
 
-**UACP v3.0.0** - Filesystem as Memory for AI Agents
+**UACP v3.2.0** - Filesystem as Memory for AI Agents
