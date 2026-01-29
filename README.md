@@ -2,10 +2,6 @@
 
 A filesystem-based context management system for AI agents. UACP provides a standardized structure for AI agents to maintain persistent memory, follow consistent patterns, and collaborate effectively across sessions.
 
-## Version
-
-**v3.0.0** - AI-Agnostic Edition
-
 ## Philosophy
 
 AI agents work best when they have:
@@ -30,6 +26,8 @@ UACP provides this structure through a simple `.ai/` directory and pointer files
 
 ### Installation
 
+#### macOS / Linux
+
 ```bash
 # Clone or download this repository
 cd /path/to/UACP
@@ -39,6 +37,20 @@ bash install.sh
 ```
 
 This creates a symlink: `~/.local/bin/uacp` → `<repo>/uacp`
+
+#### Windows
+
+**Prerequisites**: Git Bash must be installed ([Download here](https://git-scm.com/downloads))
+
+```powershell
+# Clone or download this repository
+cd path\to\UACP
+
+# Install PowerShell module
+.\install.ps1
+```
+
+This creates a PowerShell module in: `Documents\PowerShell\Modules\UACP`
 
 ### Initialize a Project
 
@@ -222,12 +234,19 @@ Agents are empowered to create new files in `.ai/memory/` when they add value fo
 
 ## Uninstallation
 
+### macOS / Linux
 ```bash
 cd /path/to/UACP
 bash uninstall.sh
 ```
 
-This removes the symlink from `~/.local/bin/uacp`. Source files in the repo are preserved.
+### Windows
+```powershell
+cd path\to\UACP
+.\uninstall.ps1
+```
+
+Source files in the repo are preserved - only the command/module is removed.
 
 ## Use Cases
 
@@ -259,9 +278,13 @@ uacp init "ClientName"
 
 ## Requirements
 
-- **Operating System**: macOS, Linux, or Windows with Git Bash
+### macOS / Linux
 - **Shell**: bash or zsh
 - **PATH**: `~/.local/bin` should be in your PATH (install script checks this)
+
+### Windows
+- **Git Bash**: Required ([Download here](https://git-scm.com/downloads))
+- **PowerShell**: Version 5.1 or later (included with Windows 10+)
 
 ## Roadmap
 
