@@ -2,12 +2,25 @@
 
 # UACP Uninstallation Script
 # Removes the 'uacp' command symlink
+# Supports PowerShell mode for Windows integration
 
 set -e  # Exit on error
 
 INSTALL_DIR="$HOME/.local/bin"
 COMMAND_NAME="uacp"
 SYMLINK_PATH="$INSTALL_DIR/$COMMAND_NAME"
+
+# PowerShell mode - output configuration data as JSON
+if [ "$1" == "-powershell" ]; then
+    # Output JSON configuration for PowerShell
+    cat <<EOF
+{
+  "CommandName": "uacp",
+  "SymlinkPath": "$SYMLINK_PATH"
+}
+EOF
+    exit 0
+fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  UACP Uninstallation"

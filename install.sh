@@ -2,6 +2,7 @@
 
 # UACP Installation Script
 # Installs the 'uacp' command globally via symlink
+# Supports PowerShell mode for Windows integration
 
 set -e  # Exit on error
 
@@ -9,6 +10,25 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 INSTALL_DIR="$HOME/.local/bin"
 COMMAND_NAME="uacp"
 SOURCE_SCRIPT="$SCRIPT_DIR/$COMMAND_NAME"
+
+# PowerShell mode - output configuration data as JSON
+if [ "$1" == "-powershell" ]; then
+    # Extract version from uacp script
+    VERSION=$(grep "^UACP_VERSION=" "$SOURCE_SCRIPT" | cut -d'"' -f2)
+
+    # Output JSON configuration for PowerShell
+    cat <<EOF
+{
+  "ScriptDir": "$SCRIPT_DIR",
+  "TemplateDir": "$SCRIPT_DIR/templates",
+  "Version": "$VERSION",
+  "UACPDir": ".ai",
+  "CommandName": "uacp",
+  "BashScript": "$SOURCE_SCRIPT"
+}
+EOF
+    exit 0
+fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  UACP Installation"
