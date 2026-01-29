@@ -7,6 +7,9 @@ tmp/
 
 # Development context (not a UACP pointer)
 claude.md
+gemini.md
+agents.md
+open-code.md
 
 # macOS
 .DS_Store
