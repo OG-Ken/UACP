@@ -5,6 +5,9 @@ Legacy/
 test-*/
 tmp/
 
+# Development context (not a UACP pointer)
+claude.md
+
 # macOS
 .DS_Store
 
