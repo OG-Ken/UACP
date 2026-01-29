@@ -1,0 +1,19 @@
+# Legacy versions
+Legacy/
+
+# Test directories
+test-*/
+tmp/
+
+# macOS
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Backup files
+*.bak
