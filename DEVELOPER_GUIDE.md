@@ -35,6 +35,20 @@ uacp
 └── Main Execution (lines 550+)
 ```
 
+### Project Directory Structure (created by `uacp init`)
+
+```
+.ai/
+├── context.md          (project rules and structure)
+├── memory/             (active state and tasks)
+├── templates/          (file patterns and examples)
+├── artifacts/          (generated outputs)
+├── claude/             (Claude Code settings and agents)
+│   └── agents/         (project-level Claude sub-agents)
+└── tmp/                (experimental work)
+.claude -> .ai/claude   (symlink — keeps project root clean)
+```
+
 ## Adding a New Command
 
 ### Step 1: Create the Command Function

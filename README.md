@@ -26,8 +26,31 @@ UACP provides this structure through a simple `.ai/` directory and pointer files
 
 ### Installation
 
-#### macOS / Linux
+#### One-Line Install (Recommended)
 
+No cloning required — copy and paste one command:
+
+**macOS / Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/OG-Ken/UACP/main/bootstrap.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+iwr -useb https://raw.githubusercontent.com/OG-Ken/UACP/main/bootstrap.ps1 | iex
+```
+
+The bootstrap script downloads UACP, installs it to a standard location, registers the `uacp` command, verifies the installation, and cleans up the temporary download automatically.
+
+**Re-run the same command to update UACP to the latest version.**
+
+---
+
+#### Manual Install (Developer / Local Clone)
+
+If you have cloned the repo and want a live-edit symlink:
+
+**macOS / Linux:**
 ```bash
 # Clone or download this repository
 cd /path/to/UACP
@@ -38,7 +61,7 @@ bash install.sh
 
 This creates a symlink: `~/.local/bin/uacp` → `<repo>/uacp`
 
-#### Windows
+**Windows:**
 
 **Prerequisites**: Git Bash must be installed ([Download here](https://git-scm.com/downloads))
 
@@ -77,10 +100,13 @@ my-awesome-project/
 │   │   ├── task.md            # Task list template
 │   │   ├── session_log.md     # Logging template
 │   │   └── context_summary.md # Summary template
+│   ├── claude/
+│   │   └── agents/            # Claude Code sub-agents (symlinked from .claude/)
 │   ├── artifacts/              # Deliverables
 │   └── tmp/                    # Experiments
-├── .gitignore                  # Ignores .ai
-├── claude.md                   # Pointer file
+├── .claude -> .ai/claude/      # Symlink (keeps root clean)
+├── .gitignore                  # Ignores .ai and .claude
+├── claude.md                   # Pointer file (Claude-specific)
 ├── gemini.md                   # Pointer file
 ├── agents.md                   # Pointer file
 └── open-code.md                # Pointer file
@@ -114,6 +140,43 @@ All pointer files contain the same AI-agnostic instructions.
 - `decisions.md` - Key decisions and rationale
 - `session_*.md` - Session logs
 - Any other persistent context
+
+## Claude Agent Storage
+
+UACP automatically keeps Claude Code's project files inside `.ai/` using a symlink. This preserves **Root Directory Purity** — no extra directories cluttering your project root.
+
+### How It Works
+
+When you run `uacp init`, it:
+1. Creates `.ai/claude/agents/` to store project-level Claude agents
+2. Creates a symlink: `.claude/` → `.ai/claude/`
+
+Claude Code reads and writes to `.claude/` as normal — but the files actually live inside `.ai/claude/`. The root stays clean.
+
+### Adding Claude Agents
+
+Place agent definition `.md` files in `.ai/claude/agents/`:
+
+```bash
+# Create a custom agent for this project
+nano .ai/claude/agents/my-reviewer.md
+
+# Claude Code finds it automatically via the .claude/ symlink
+```
+
+### Migrating an Existing `.claude/` Directory
+
+If your project already has a `.claude/` directory when you run `uacp init`, UACP will prompt you:
+
+```
+[!] Found an existing .claude directory.
+    UACP can migrate its contents to .ai/claude/ and replace .claude/ with a symlink.
+
+Migrate .claude/ → .ai/claude/ and replace with symlink? (y/n)
+```
+
+- **y**: Contents are moved, symlink is created. Everything continues working.
+- **n**: `.claude/` is left untouched. Agents stay in the default location.
 
 ## Available Commands
 
@@ -390,4 +453,4 @@ OG-Ken
 
 ---
 
-**UACP v3.2.0** - Filesystem as Memory for AI Agents
+**UACP v3.3.0** - Filesystem as Memory for AI Agents

@@ -11,6 +11,10 @@ gemini.md
 agents.md
 open-code.md
 
+# UACP artifacts (if uacp init is accidentally run in this repo)
+.ai/
+.claude
+
 # macOS
 .DS_Store
 

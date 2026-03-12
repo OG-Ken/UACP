@@ -20,4 +20,4 @@ Read This File → Read .ai/context.md → Read .ai/memory/task.md → Execute
 ```
 
 ---
-*UACP v3.0 - Filesystem as Memory for AI Agents*
+*UACP v3.3 - Filesystem as Memory for AI Agents*

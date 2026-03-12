@@ -13,6 +13,7 @@
 - **/.ai/memory/**: Active project state. READ THIS FIRST before taking action.
 - **/.ai/templates/**: Patterns and examples for creating consistent files.
 - **/.ai/artifacts/**: Final deliverables and generated outputs.
+- **/.ai/claude/agents/**: Claude Code sub-agents for this project (`.claude/` symlinks here).
 - **/.ai/tmp/**: Sandbox for experiments and non-production work.
 
 ## 3. Project Definition
@@ -43,4 +44,4 @@ The `.ai/memory/` directory is your persistent working memory:
 Create memory files freely when they add value for future sessions.
 
 ---
-*UACP v3.0 - AI-Agnostic Context Protocol*
+*UACP v3.3 - AI-Agnostic Context Protocol*
