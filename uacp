@@ -4,7 +4,7 @@
 # UACP - Unified Agentic Context Protocol
 # A modular command-line tool for managing AI agent contexts
 #
-# Version: 3.2.0
+# Version: 3.3.0
 # Author: OG-Ken
 # Repository: https://github.com/OG-Ken/UACP
 ################################################################################
@@ -13,7 +13,7 @@
 # CONFIGURATION
 # ============================================================================
 
-UACP_VERSION="3.2.0"
+UACP_VERSION="3.3.0"
 UACP_DIR=".ai"
 
 # Get script directory for template files (follow symlinks)
@@ -87,6 +87,8 @@ DIRECTORY STRUCTURE:
     ├── memory/                 Active state and tasks
     ├── templates/              File patterns and examples
     ├── artifacts/              Generated outputs
+    ├── claude/                 Claude Code settings and agents
+    │   └── agents/             Claude Code sub-agents (symlinked from .claude/)
     └── tmp/                    Experimental work
 
 TEMPLATES:
@@ -139,6 +141,7 @@ cmd_init() {
     mkdir -p "$UACP_DIR/artifacts"
     mkdir -p "$UACP_DIR/templates"
     mkdir -p "$UACP_DIR/tmp"
+    mkdir -p "$UACP_DIR/claude/agents"
 
     success "Created $UACP_DIR directory structure"
 
@@ -152,16 +155,21 @@ cmd_init() {
     cp "$TEMPLATE_DIR/context_summary.md" "$UACP_DIR/templates/"
     success "Generated templates"
 
-    # 4. Generate pointer files from template
+    # 4. Generate pointer files
+    #    claude.md uses the Claude-specific template (includes agent storage rules)
+    #    all other pointer files use the standard template
     local pointer_content
     pointer_content=$(load_template "pointer.md")
 
+    local claude_pointer_content
+    claude_pointer_content=$(load_template "claude_pointer.md")
+
     # Handle -claudeonly option
     if [[ "$options" == *"claudeonly"* ]]; then
-        echo "$pointer_content" > claude.md
+        echo "$claude_pointer_content" > claude.md
         success "Generated pointer file (claude.md only)"
     else
-        echo "$pointer_content" > claude.md
+        echo "$claude_pointer_content" > claude.md
         echo "$pointer_content" > gemini.md
         echo "$pointer_content" > agents.md
         echo "$pointer_content" > open-code.md
@@ -176,16 +184,69 @@ cmd_init() {
         info "  [SKIP] memory/task.md already exists"
     fi
 
-    # 6. Generate .gitignore from template (ignores .ai/ by default)
+    # 6. Generate or update .gitignore
+    #    If no .gitignore exists: create from template.
+    #    If .gitignore exists but is missing .ai/ or .claude: prepend the UACP block.
+    #    If .gitignore already contains both entries: skip.
+    local gitignore_template
+    gitignore_template=$(load_template "gitignore.md")
+
     if [ ! -f ".gitignore" ]; then
-        load_template "gitignore.md" > ".gitignore"
+        echo "$gitignore_template" > ".gitignore"
         touch "$UACP_DIR/tmp/.gitkeep"
         success "Generated .gitignore"
     else
-        info "  [SKIP] .gitignore already exists"
+        local has_ai has_claude
+        has_ai=$(grep -c "^\.ai/$" ".gitignore" 2>/dev/null || true)
+        has_claude=$(grep -c "^\.claude$" ".gitignore" 2>/dev/null || true)
+
+        if [ "$has_ai" -gt 0 ] && [ "$has_claude" -gt 0 ]; then
+            info "  [SKIP] .gitignore already contains UACP entries"
+        else
+            # Prepend UACP block to the existing .gitignore
+            local existing_content
+            existing_content=$(cat ".gitignore")
+            printf '%s\n\n%s\n' "$gitignore_template" "$existing_content" > ".gitignore"
+            success "Updated .gitignore with UACP entries"
+        fi
     fi
 
-    # 7. Success summary
+    # 7. Set up .claude symlink → .ai/claude/
+    #    This redirects Claude Code's project directory into .ai/ to keep the root clean.
+    echo ""
+    if [ -L ".claude" ]; then
+        local current_target
+        current_target=$(readlink ".claude")
+        if [ "$current_target" = "$UACP_DIR/claude" ]; then
+            info "  [SKIP] .claude symlink already points to $UACP_DIR/claude"
+        else
+            info "  [WARN] .claude is a symlink but points to '$current_target'"
+            info "         Expected: $UACP_DIR/claude"
+            info "         Update manually: rm .claude && ln -s $UACP_DIR/claude .claude"
+        fi
+    elif [ -d ".claude" ]; then
+        echo ""
+        info "  [!] Found an existing .claude directory."
+        info "      UACP can migrate its contents to $UACP_DIR/claude/ and"
+        info "      replace .claude/ with a symlink to keep your project root clean."
+        echo ""
+        read -p "  Migrate .claude/ → $UACP_DIR/claude/ and replace with symlink? (y/n) " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            cp -r ".claude/." "$UACP_DIR/claude/"
+            rm -rf ".claude"
+            ln -s "$UACP_DIR/claude" ".claude"
+            success "Migrated .claude/ → $UACP_DIR/claude/ and created symlink"
+        else
+            info "  [SKIP] Migration declined. .claude/ was not modified."
+            info "         Claude agents will continue using .claude/ (not .ai/claude/)."
+        fi
+    else
+        ln -s "$UACP_DIR/claude" ".claude"
+        success "Created .claude → $UACP_DIR/claude symlink"
+    fi
+
+    # 8. Success summary
     echo ""
     info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     success "UACP v${UACP_VERSION} Initialization Complete!"
@@ -195,6 +256,7 @@ cmd_init() {
     info "  1. Read claude.md, gemini.md, agents.md, or open-code.md"
     info "  2. Update .ai/memory/task.md with your project goals"
     info "  3. Update .ai/context.md with project-specific information"
+    info "  4. Add Claude agents to .ai/claude/agents/ (accessible via .claude/)"
     echo ""
     info "Note: The .ai/ directory is gitignored by default for privacy."
     info "      Modify .gitignore if you want to commit AI context to your repo."
@@ -205,7 +267,10 @@ cmd_init() {
     info "  ├── memory/          (Active state and tasks)"
     info "  ├── templates/       (File patterns and examples)"
     info "  ├── artifacts/       (Generated outputs)"
+    info "  ├── claude/          (Claude Code settings and agents)"
+    info "  │   └── agents/      (Place .md agent files here)"
     info "  └── tmp/             (Experimental work)"
+    info "  .claude → .ai/claude (symlink — keeps root clean)"
     echo ""
 }
 
